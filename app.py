@@ -42,3 +42,5 @@ def callback():
                 print(f"LINE API 回覆錯誤：{e.status} - {e.reason}")
 
     return "OK"
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=10000)
