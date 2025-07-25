@@ -1,13 +1,7 @@
-# chatgpt_reply.py
-
 import openai
 import os
-from dotenv import load_dotenv
 
-# ✅ 載入 .env 內容
-load_dotenv()
-
-# ✅ 讀取金鑰
+# 從 GitHub Secrets 取得金鑰（環境變數）
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
 def get_reply(user_message):
@@ -17,7 +11,6 @@ def get_reply(user_message):
             messages=[{"role": "user", "content": user_message}]
         )
         reply = response.choices[0].message.content.strip()
-
         if reply:
             print("💬 GPT回覆：", reply)
             return reply
