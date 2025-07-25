@@ -20,6 +20,7 @@ def callback():
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
     user_msg = event.message.text
+    print("👉 使用者傳來的訊息：", user_message)  # ← 這行是加的 log
     reply_text = generate_reply(user_msg)  # ✨取得 ChatGPT 回覆
     line_bot_api.reply_message(
         event.reply_token,
