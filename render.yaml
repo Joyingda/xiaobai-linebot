@@ -1,10 +1,16 @@
 services:
   - type: web
     name: xiaobai-linebot
-    env: python
-    buildCommand: "pip install -r requirements.txt"
-    startCommand: "python app.py"
+    runtime: python
+    region: asia
     plan: free
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "gunicorn app:app -w 1"
     autoDeploy: true
-    build:
-      pythonVersion: 3.10.13
+    envVars:
+      - key: LINE_CHANNEL_SECRET
+        value: your_line_channel_secret
+      - key: LINE_CHANNEL_ACCESS_TOKEN
+        value: your_line_channel_access_token
+      - key: DOUBAO_API_KEY
+        value: your_doubao_api_key
