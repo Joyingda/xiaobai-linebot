@@ -1,22 +1,23 @@
 # chatgpt_reply.py
+
 import openai
 import os
+from dotenv import load_dotenv
 
-# ✅ 建議使用環境變數管理金鑰，較安全
-openai.api_key = os.getenv("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")
+# ✅ 載入 .env 內容
+load_dotenv()
+
+# ✅ 讀取金鑰
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
 def get_reply(user_message):
     try:
-        # ✅ 呼叫 ChatGPT API
         response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
-            messages=[
-                {"role": "user", "content": user_message}
-            ]
+            messages=[{"role": "user", "content": user_message}]
         )
         reply = response.choices[0].message.content.strip()
 
-        # ✅ 判斷是否有回覆內容
         if reply:
             print("💬 GPT回覆：", reply)
             return reply
@@ -26,4 +27,3 @@ def get_reply(user_message):
     except Exception as e:
         print("🚨 ChatGPT回覆錯誤：", e)
         return "主人，我連不上大腦了，稍後再試一次 🙇‍♂️"
-
