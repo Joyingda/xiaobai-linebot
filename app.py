@@ -1,11 +1,14 @@
 from flask import Flask, request, abort
 from linebot import LineBotApi, WebhookHandler
 from linebot.models import MessageEvent, TextMessage, TextSendMessage
-from chatgpt_reply import generate_reply  # 🔁 引入回覆模組
+from chatgpt_reply import get_reply
+import os
 
 app = Flask(__name__)
-line_bot_api = LineBotApi("XAE8ktzcikRi7RVHd2CFeoac0AJTmBXDlg92IvgOrHb8LulUCvEvYsGEZ/xe/l1IPLS6SZ5gIgIwBnQdf7TEJc6XJcFSPgGvcHrU2H/UXYBnb2IbHSxYYNSA3DztPHUBmr3rCponiG7cfgsThkz9JwdB04t89/1O/w1cDnyilFU=")
-handler = WebhookHandler("75aaf6512771a9f69e1e28e45162e2bf")
+
+# 從環境變數讀取 LINE 金鑰
+line_bot_api = LineBotApi(os.getenv("LINE_CHANNEL_ACCESS_TOKEN"))
+handler = WebhookHandler(os.getenv("LINE_CHANNEL_SECRET"))
 
 @app.route("/callback", methods=['POST'])
 def callback():
@@ -19,9 +22,9 @@ def callback():
 
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
-    user_msg = event.message.text
-    print("👉 使用者傳來的訊息：", user_message)  # ← 這行是加的 log
-    reply_text = generate_reply(user_msg)  # ✨取得 ChatGPT 回覆
+    user_message = event.message.text
+    print("👉 使用者傳來的訊息：", user_message)
+    reply_text = get_reply(user_message)
     line_bot_api.reply_message(
         event.reply_token,
         TextSendMessage(text=reply_text)
