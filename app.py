@@ -3,17 +3,20 @@ from linebot.v3.messaging import MessagingApi, Configuration, ApiClient, ReplyMe
 from linebot.v3.webhook import WebhookParser
 from linebot.v3.webhooks.models import MessageEvent, TextMessageContent
 from linebot.v3.exceptions import InvalidSignatureError
+from openai import OpenAI
 import os
-import openai
 
 app = Flask(__name__)
 
 # 環境變數讀取
 channel_access_token = os.getenv("LINE_CHANNEL_ACCESS_TOKEN")
 channel_secret = os.getenv("LINE_CHANNEL_SECRET")
-openai.api_key = os.getenv("OPENAI_API_KEY")
+openai_api_key = os.getenv("OPENAI_API_KEY")
 
-# LINE SDK 初始化
+# 初始化 OpenAI 客戶端（新版語法）
+client = OpenAI(api_key=openai_api_key)
+
+# 初始化 LINE SDK
 configuration = Configuration(access_token=channel_access_token)
 api_client = ApiClient(configuration)
 messaging_api = MessagingApi(api_client)
@@ -35,11 +38,12 @@ def callback():
 
         if isinstance(event, MessageEvent) and isinstance(event.message, TextMessageContent):
             user_text = event.message.text
-            print(f"💬 使用者訊息：{user_text}")
+            user_id = event.source.user_id
+            print(f"💬 使用者 {user_id} 訊息：{user_text}")
 
-            # GPT 回覆邏輯（小助理語氣設定）
+            # GPT 回覆邏輯（新版 SDK）
             try:
-                completion = openai.ChatCompletion.create(
+                response = client.chat.completions.create(
                     model="gpt-3.5-turbo",
                     messages=[
                         {
@@ -56,10 +60,11 @@ def callback():
                         }
                     ]
                 )
-                reply_text = completion.choices[0].message.content
+                reply_text = response.choices[0].message.content
             except Exception as e:
-                reply_text = f"主人～小白暫時處理不了這條訊息呢，錯誤訊息如下：{str(e)}"
+                reply_text = f"主人～小白暫時處理不了這條訊息呢，錯誤如下：{str(e)}"
 
+            # 回覆使用者
             reply = ReplyMessageRequest(
                 reply_token=event.reply_token,
                 messages=[TextMessage(text=reply_text)]
