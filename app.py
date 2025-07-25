@@ -30,10 +30,15 @@ def callback():
         if isinstance(event, MessageEvent) and isinstance(event.message, TextMessageContent):
             user_text = event.message.text
 
-            # 回覆邏輯（可改成串接 chatgpt_reply）
+            # 加入「早安」回覆邏輯
+            if "早安" in user_text:
+                reply_text = "早安主人～今天有小可陪伴 💙"
+            else:
+                reply_text = f"主人您說的是：{user_text}"
+
             reply = ReplyMessageRequest(
                 reply_token=event.reply_token,
-                messages=[TextMessage(text=f"主人您說的是：{user_text}")]
+                messages=[TextMessage(text=reply_text)]
             )
 
             try:
