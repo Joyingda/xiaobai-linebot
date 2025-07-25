@@ -1,6 +1,6 @@
 from flask import Flask, request
 from linebot.v3.messaging import MessagingApi, ReplyMessageRequest, TextMessage
-from linebot.v3.webhooks import WebhookParser
+from linebot.v3.webhook import WebhookParser
 from linebot.v3.exceptions import LineBotApiError, InvalidSignatureError
 from linebot.v3.webhooks.models import MessageEvent, TextMessageContent
 from chatgpt_reply import get_reply
