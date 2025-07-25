@@ -1,11 +1,11 @@
 from flask import Flask, request, abort
 from linebot import LineBotApi, WebhookHandler
 from linebot.models import MessageEvent, TextMessage, TextSendMessage
+from chatgpt_reply import generate_reply  # 🔁 引入回覆模組
 
 app = Flask(__name__)
-
-line_bot_api = LineBotApi('XAE8ktzcikRi7RVHd2CFeoac0AJTmBXDlg92IvgOrHb8LulUCvEvYsGEZ/xe/l1IPLS6SZ5gIgIwBnQdf7TEJc6XJcFSPgGvcHrU2H/UXYBnb2IbHSxYYNSA3DztPHUBmr3rCponiG7cfgsThkz9JwdB04t89/1O/w1cDnyilFU=')
-handler = WebhookHandler('75aaf6512771a9f69e1e28e45162e2bf')
+line_bot_api = LineBotApi("XAE8ktzcikRi7RVHd2CFeoac0AJTmBXDlg92IvgOrHb8LulUCvEvYsGEZ/xe/l1IPLS6SZ5gIgIwBnQdf7TEJc6XJcFSPgGvcHrU2H/UXYBnb2IbHSxYYNSA3DztPHUBmr3rCponiG7cfgsThkz9JwdB04t89/1O/w1cDnyilFU=")
+handler = WebhookHandler("75aaf6512771a9f69e1e28e45162e2bf")
 
 @app.route("/callback", methods=['POST'])
 def callback():
@@ -20,7 +20,7 @@ def callback():
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
     user_msg = event.message.text
-    reply_text = "您好主人，小可已待命！您剛說的是：「{}」".format(user_msg)
+    reply_text = generate_reply(user_msg)  # ✨取得 ChatGPT 回覆
     line_bot_api.reply_message(
         event.reply_token,
         TextSendMessage(text=reply_text)
