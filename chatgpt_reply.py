@@ -1,7 +1,7 @@
 import openai
 import os
 
-# 從 GitHub Secrets 取得金鑰（環境變數）
+# 從 GitHub Secrets 環境變數讀取 API Key
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
 def get_reply(user_message):
