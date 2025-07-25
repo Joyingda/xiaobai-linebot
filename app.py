@@ -1,81 +1,80 @@
-from flask import Flask, request
-from linebot.v3.messaging import MessagingApi, Configuration, ApiClient, ReplyMessageRequest, TextMessage, ApiException
-from linebot.v3.webhook import WebhookParser
-from linebot.v3.webhooks.models import MessageEvent, TextMessageContent
-from linebot.v3.exceptions import InvalidSignatureError
-from openai import OpenAI
+from flask import Flask, request, abort
+from linebot import LineBotApi, WebhookHandler
+from linebot.exceptions import InvalidSignatureError
+from linebot.models import MessageEvent, TextMessage, TextSendMessage
+
 import os
+import json
+import requests
+from datetime import datetime
+
+# ===== 使用 Render 環境變數 =====
+LINE_CHANNEL_ACCESS_TOKEN = os.environ.get("LINE_CHANNEL_ACCESS_TOKEN")
+LINE_CHANNEL_SECRET = os.environ.get("LINE_CHANNEL_SECRET")
+DOUBAO_API_KEY = os.environ.get("DOUBAO_API_KEY")
+DOUBAO_API_URL = 'https://openapi.doubao.com/v1/chat/completions'
 
 app = Flask(__name__)
+line_bot_api = LineBotApi(LINE_CHANNEL_ACCESS_TOKEN)
+handler = WebhookHandler(LINE_CHANNEL_SECRET)
 
-# 環境變數讀取
-channel_access_token = os.getenv("LINE_CHANNEL_ACCESS_TOKEN")
-channel_secret = os.getenv("LINE_CHANNEL_SECRET")
-openai_api_key = os.getenv("OPENAI_API_KEY")
-
-# 初始化 OpenAI 客戶端（新版語法）
-client = OpenAI(api_key=openai_api_key)
-
-# 初始化 LINE SDK
-configuration = Configuration(access_token=channel_access_token)
-api_client = ApiClient(configuration)
-messaging_api = MessagingApi(api_client)
-parser = WebhookParser(channel_secret)
-
-@app.route("/callback", methods=["POST"])
-def callback():
-    signature = request.headers.get("X-Line-Signature", "")
-    body = request.get_data(as_text=True)
-
+# ===== 儲存訊息紀錄到 history.json =====
+def save_message_record(user_id, user_text):
+    record = {
+        "user_id": user_id,
+        "text": user_text,
+        "time": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    }
     try:
-        events = parser.parse(body, signature)
+        with open("history.json", "r", encoding="utf-8") as f:
+            history = json.load(f)
+    except FileNotFoundError:
+        history = []
+    history.append(record)
+    with open("history.json", "w", encoding="utf-8") as f:
+        json.dump(history, f, ensure_ascii=False, indent=2)
+
+# ===== 與豆包對話 =====
+def ask_doubao(user_text):
+    headers = {
+        "Authorization": f"Bearer {DOUBAO_API_KEY}",
+        "Content-Type": "application/json"
+    }
+    data = {
+        "model": "doubao-chat",
+        "messages": [
+            {"role": "system", "content": "你是一位溫柔風趣的助理，稱呼對方為主人，用男性語氣回覆"},
+            {"role": "user", "content": user_text}
+        ]
+    }
+    response = requests.post(DOUBAO_API_URL, headers=headers, json=data)
+    if response.status_code == 200:
+        return response.json()["choices"][0]["message"]["content"]
+    else:
+        return f"豆包回不來了 😢 錯誤碼：{response.status_code}"
+
+# ===== LINE webhook 路徑 =====
+@app.route("/callback", methods=['POST'])
+def callback():
+    signature = request.headers['X-Line-Signature']
+    body = request.get_data(as_text=True)
+    try:
+        handler.handle(body, signature)
     except InvalidSignatureError:
-        print("❌ Invalid signature")
-        return "Invalid signature", 400
+        abort(400)
+    return 'OK'
 
-    for event in events:
-        print(f"🛰️ 收到事件：{event}")
-
-        if isinstance(event, MessageEvent) and isinstance(event.message, TextMessageContent):
-            user_text = event.message.text
-            user_id = event.source.user_id
-            print(f"💬 使用者 {user_id} 訊息：{user_text}")
-
-            # GPT 回覆邏輯（新版 SDK）
-            try:
-                response = client.chat.completions.create(
-                    model="gpt-3.5-turbo",
-                    messages=[
-                        {
-                            "role": "system",
-                            "content": (
-                                "你是一位溫柔、聰明又有條理的小助理，名字叫小白，"
-                                "你在 LINE 上幫助主人處理日常大小事，回覆要簡潔、親切、聽話，"
-                                "語氣要有輕快口吻，常使用『主人』稱呼對方，要自然不造作。"
-                            )
-                        },
-                        {
-                            "role": "user",
-                            "content": user_text
-                        }
-                    ]
-                )
-                reply_text = response.choices[0].message.content
-            except Exception as e:
-                reply_text = f"主人～小白暫時處理不了這條訊息呢，錯誤如下：{str(e)}"
-
-            # 回覆使用者
-            reply = ReplyMessageRequest(
-                reply_token=event.reply_token,
-                messages=[TextMessage(text=reply_text)]
-            )
-
-            try:
-                messaging_api.reply_message(reply)
-            except ApiException as e:
-                print(f"❌ 回覆失敗！{e.status} - {e.reason}")
-
-    return "OK"
+# ===== 處理文字訊息事件 =====
+@handler.add(MessageEvent, message=TextMessage)
+def handle_message(event):
+    user_id = event.source.user_id
+    user_text = event.message.text
+    save_message_record(user_id, user_text)
+    bot_reply = ask_doubao(user_text)
+    line_bot_api.reply_message(
+        event.reply_token,
+        TextSendMessage(text=bot_reply)
+    )
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=10000)
+    app.run()
