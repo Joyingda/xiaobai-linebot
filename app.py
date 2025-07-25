@@ -24,13 +24,17 @@ def callback():
     try:
         events = parser.parse(body, signature)
     except InvalidSignatureError:
+        print("❌ Invalid signature")
         return "Invalid signature", 400
 
     for event in events:
+        print(f"🛰️ 收到事件：{event}")
+
         if isinstance(event, MessageEvent) and isinstance(event.message, TextMessageContent):
             user_text = event.message.text
+            print(f"💬 使用者訊息：{user_text}")
 
-            # 加入「早安」回覆邏輯
+            # 回覆邏輯
             if "早安" in user_text:
                 reply_text = "早安主人～今天有小可陪伴 💙"
             else:
@@ -44,10 +48,10 @@ def callback():
             try:
                 messaging_api.reply_message(reply)
             except ApiException as e:
-                print(f"回覆失敗！{e.status} - {e.reason}")
+                print(f"❌ 回覆失敗！{e.status} - {e.reason}")
 
     return "OK"
 
-# Flask 主程式啟動段（必加，否則閃退）
+# 主程式啟動段
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=10000)
