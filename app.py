@@ -3,7 +3,9 @@ from linebot.v3.messaging import MessagingApi, ReplyMessageRequest, TextMessage,
 from linebot.v3.webhook import WebhookParser
 from linebot.v3.webhooks.models import MessageEvent, TextMessageContent
 from linebot.v3.exceptions import InvalidSignatureError
-from chatgpt_reply import get_reply
+def get_reply(text):
+    return f"主人您說的是：{text}"
+
 import os
 
 app = Flask(__name__)
