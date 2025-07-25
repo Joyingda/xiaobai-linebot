@@ -9,3 +9,5 @@ def get_reply(user_message):
         return f"主人，我收到您的訊息了：『{user_message}』"
     else:
         return "主人，您傳來的是空白訊息，小可不知如何回覆🫣"
+def get_reply(text):
+    return f"主人您說的是：{text}"
