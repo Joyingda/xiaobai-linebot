@@ -6,5 +6,5 @@ services:
     startCommand: "python app.py"
     plan: free
     autoDeploy: true
-build:
-  pythonVersion: 3.10.13
+    build:
+      pythonVersion: 3.10.13
