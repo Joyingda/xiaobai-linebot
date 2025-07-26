@@ -41,7 +41,7 @@ def ask_deepseek(user_text):
     }
     model_name = os.environ.get("DEEPSEEK_MODEL", "deepseek-chat")
     temperature = float(os.environ.get("DEEPSEEK_TEMPERATURE", "0.7"))
-    system_prompt = os.environ.get("DEEPSEEK_SYSTEM_PROMPT", "你是一位親切幽默的男僕助理，稱呼使用者為主人")
+    system_prompt = os.environ.get("DEEPSEEK_SYSTEM_PROMPT", "你是一位親切幽默的女僕助理，稱呼使用者為主人")
     data = {
         "model": model_name,
         "messages": [
