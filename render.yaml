@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: openai-linebot
+    name: line-gptbot-freeapi
     env: python
     plan: free
     buildCommand: "pip install -r requirements.txt"
@@ -11,6 +11,9 @@ services:
       - key: LINE_CHANNEL_SECRET
         sync: false
       - key: OPENAI_API_KEY
+        sync: false         # 來自 https://free.v36.cm 的免費金鑰
+      - key: OPENAI_BASE_URL
+        value: https://free.v36.cm/v1
         sync: false
       - key: OPENAI_MODEL_NAME
         value: gpt-3.5-turbo
