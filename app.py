@@ -17,11 +17,11 @@ app = Flask(__name__)
 line_bot_api = LineBotApi(LINE_CHANNEL_ACCESS_TOKEN)
 handler = WebhookHandler(LINE_CHANNEL_SECRET)
 
-# ✅ 設定 OpenAI SDK
+# ✅ OpenAI API 設定
 openai.api_key = OPENAI_API_KEY
 openai.base_url = OPENAI_BASE_URL
 
-# 📬 LINE Webhook 路由
+# 📫 LINE Webhook 路由
 @app.route("/callback", methods=['POST'])
 def callback():
     signature = request.headers['X-Line-Signature']
@@ -37,16 +37,31 @@ def callback():
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
     user_input = event.message.text
-    response = openai.chat.completions.create(
-        model=OPENAI_MODEL_NAME,
-        messages=[
-            {"role": "system", "content": OPENAI_SYSTEM_PROMPT},
-            {"role": "user", "content": user_input},
-        ]
-    )
-    reply = response.choices[0].message.content.strip()
-    line_bot_api.reply_message(event.reply_token, TextSendMessage(text=reply))
 
-# 🧪 本地啟動
+    # 📡 Debug 訊息
+    print(f"📡 呼叫 GPT base_url：{openai.base_url}")
+    print(f"🔧 模型使用：{OPENAI_MODEL_NAME}")
+    print(f"💬 使用者輸入：{user_input}")
+
+    try:
+        response = openai.chat.completions.create(
+            model=OPENAI_MODEL_NAME,
+            messages=[
+                {"role": "system", "content": OPENAI_SYSTEM_PROMPT},
+                {"role": "user", "content": user_input},
+            ]
+        )
+        reply = response.choices[0].message.content.strip()
+    except Exception as e:
+        reply = f"❌ 錯誤：GPT 回覆失敗！{str(e)}"
+        print(f"⚠️ GPT 錯誤：{e}")
+
+    # 🗣️ 回覆使用者
+    line_bot_api.reply_message(
+        event.reply_token,
+        TextSendMessage(text=reply)
+    )
+
+# 🧪 本地開發啟動
 if __name__ == "__main__":
     app.run()
