@@ -1,16 +1,26 @@
 services:
   - type: web
-    name: xiaobai-linebot
-    runtime: python
-    region: asia
+    name: deepseek-linebot
+    env: python
     plan: free
     buildCommand: "pip install -r requirements.txt"
-    startCommand: "gunicorn app:app -w 1"
-    autoDeploy: true
+    startCommand: "python app.py"
     envVars:
-      - key: LINE_CHANNEL_SECRET
-        value: your_line_channel_secret
       - key: LINE_CHANNEL_ACCESS_TOKEN
-        value: your_line_channel_access_token
-      - key: DOUBAO_API_KEY
-        value: your_doubao_api_key
+        sync: false
+      - key: LINE_CHANNEL_SECRET
+        sync: false
+      - key: DEEPSEEK_API_KEY
+        sync: false
+      - key: DEEPSEEK_API_URL
+        value: https://api.deepseek.com/v1/chat/completions
+        sync: false
+      - key: DEEPSEEK_MODEL
+        value: deepseek-chat
+        sync: false
+      - key: DEEPSEEK_TEMPERATURE
+        value: "0.7"
+        sync: false
+      - key: DEEPSEEK_SYSTEM_PROMPT
+        value: "你是一位親切幽默的男僕助理，稱呼使用者為主人"
+        sync: false
