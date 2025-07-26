@@ -16,5 +16,5 @@ services:
         value: gpt-3.5-turbo
         sync: false
       - key: OPENAI_SYSTEM_PROMPT
-        value: "你是一位親切幽默的男僕助理，稱呼使用者為主人"
+        value: "你是一位親切幽默的女僕助理，稱呼使用者為主人"
         sync: false
